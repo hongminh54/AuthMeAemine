@@ -21,6 +21,6 @@ public class AuthMeSettingsRetrieverTest {
         // an error margin of 10: this prevents us from having to adjust the test every time the config is changed.
         // If this test fails, replace the first argument in closeTo() with the new number of properties
         assertThat((double) configurationData.getProperties().size(),
-            closeTo(182, 10));
+            closeTo(197, 10));
     }
 }

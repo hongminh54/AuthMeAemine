@@ -61,7 +61,7 @@ public class ResetIpCommandTest {
         verify(ipRestrictionService).clearAllCache();
         verify(dataSource).clearAllLastIp();
         verify(commonService).send(sender, MessageKey.IP_CACHE_CLEARED);
-        verify(sender).sendMessage("§aCleared IP data from 5 accounts in database.");
+        verify(commonService).send(sender, MessageKey.IP_DATA_CLEARED_ALL, "5");
     }
 
     @Test
@@ -83,8 +83,8 @@ public class ResetIpCommandTest {
         verify(ipRestrictionService).invalidateCache(playerIp);
         verify(dataSource).clearLastIpForIp(playerIp);
         verify(commonService).send(sender, MessageKey.IP_CACHE_RESET, playerIp);
-        verify(sender).sendMessage("§aIP reset completed for: " + playerIp);
-        verify(sender).sendMessage("§7Cache cleared and IP data removed from 3 accounts in database.");
+        verify(commonService).send(sender, MessageKey.IP_RESET_COMPLETE, playerIp);
+        verify(commonService).send(sender, MessageKey.IP_RESET_DATABASE_INFO, "3");
     }
 
     @Test
@@ -103,8 +103,8 @@ public class ResetIpCommandTest {
         verify(ipRestrictionService).invalidateCache(ipAddress);
         verify(dataSource).clearLastIpForIp(ipAddress);
         verify(commonService).send(sender, MessageKey.IP_CACHE_RESET, ipAddress);
-        verify(sender).sendMessage("§aIP reset completed for: " + ipAddress);
-        verify(sender).sendMessage("§7Cache cleared and IP data removed from 2 accounts in database.");
+        verify(commonService).send(sender, MessageKey.IP_RESET_COMPLETE, ipAddress);
+        verify(commonService).send(sender, MessageKey.IP_RESET_DATABASE_INFO, "2");
     }
 
     @Test

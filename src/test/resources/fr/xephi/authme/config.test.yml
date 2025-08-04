@@ -200,7 +200,7 @@ settings:
         # It is CaseSensitive!
         UnrestrictedName: []
     # Message language, available : en, de, br, cz, pl, fr, ru, hu, sk, es, zhtw, fi, zhcn, lt, it, ko, pt
-    messagesLanguage: en
+    messagesLanguage: vn
     # Force these commands after /login, without any '/', use %p for replace with player name
     forceCommands: []
     # Force these commands after /login as a server console, without any '/', use %p for replace with player name

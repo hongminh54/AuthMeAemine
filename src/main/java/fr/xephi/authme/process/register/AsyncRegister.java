@@ -13,6 +13,7 @@ import fr.xephi.authme.process.register.executors.RegistrationParameters;
 import fr.xephi.authme.service.BukkitService;
 import fr.xephi.authme.service.CommonService;
 import fr.xephi.authme.service.IpRestrictionService;
+import fr.xephi.authme.service.VpnDetectionService;
 import fr.xephi.authme.settings.properties.RegistrationSettings;
 import fr.xephi.authme.settings.properties.RestrictionSettings;
 import fr.xephi.authme.util.InternetProtocolUtils;
@@ -42,6 +43,9 @@ public class AsyncRegister implements AsynchronousProcess {
     private SingletonStore<RegistrationExecutor> registrationExecutorFactory;
     @Inject
     private IpRestrictionService ipRestrictionService;
+
+    @Inject
+    private VpnDetectionService vpnDetectionService;
 
     AsyncRegister() {
     }
@@ -117,10 +121,20 @@ public class AsyncRegister implements AsynchronousProcess {
      * @return true if registration may take place, false otherwise (IP check failed)
      */
     private boolean isPlayerIpAllowedToRegister(Player player) {
+        String ip = PlayerUtils.getPlayerIp(player);
+
+        if (vpnDetectionService.isVpnOrProxy(ip)) {
+            VpnDetectionService.VpnDetectionAction action = vpnDetectionService.getVpnDetectionAction();
+            if (action == VpnDetectionService.VpnDetectionAction.BLOCK_REGISTER ||
+                action == VpnDetectionService.VpnDetectionAction.KICK) {
+                service.send(player, MessageKey.VPN_PROXY_DETECTED);
+                return false;
+            }
+        }
+
         if (service.getProperty(RestrictionSettings.ENABLE_IMPROVED_IP_RESTRICTION)) {
             if (!ipRestrictionService.isIpAllowedToRegister(player)) {
                 int maxRegPerIp = service.getProperty(RestrictionSettings.MAX_REGISTRATION_PER_IP);
-                String ip = PlayerUtils.getPlayerIp(player);
                 List<String> otherAccounts = ipRestrictionService.getAllAccountsByIp(ip);
                 service.send(player, MessageKey.MAX_REGISTER_EXCEEDED, Integer.toString(maxRegPerIp),
                     Integer.toString(otherAccounts.size()), String.join(", ", otherAccounts));
@@ -131,7 +145,6 @@ public class AsyncRegister implements AsynchronousProcess {
 
         // Fallback to original logic
         int maxRegPerIp = service.getProperty(RestrictionSettings.MAX_REGISTRATION_PER_IP);
-        String ip = PlayerUtils.getPlayerIp(player);
         if (maxRegPerIp > 0
             && ip != null
             && !InternetProtocolUtils.isLoopbackAddress(ip)

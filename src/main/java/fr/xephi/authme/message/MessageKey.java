@@ -194,6 +194,15 @@ public enum MessageKey {
     /** Your country is banned from this server! */
     COUNTRY_BANNED_ERROR("on_join_validation.country_banned"),
 
+    /** VPN/Proxy connections are not allowed on this server! */
+    VPN_PROXY_DETECTED("on_join_validation.vpn_proxy_detected"),
+
+    /** VPN check result: %result */
+    VPN_CHECK_RESULT("misc.vpn_check_result", "%result"),
+
+    /** VPN detection info: %info */
+    VPN_DETECTION_INFO("misc.vpn_detection_info", "%info"),
+
     /** [AntiBotService] AntiBot enabled due to the huge number of connections! */
     ANTIBOT_AUTO_ENABLED_MESSAGE("antibot.auto_enabled"),
 
@@ -336,7 +345,19 @@ public enum MessageKey {
     IP_CACHE_RESET("misc.ip_cache_reset", "%ip"),
 
     /** All IP cache has been cleared */
-    IP_CACHE_CLEARED("misc.ip_cache_cleared");
+    IP_CACHE_CLEARED("misc.ip_cache_cleared"),
+
+    /** IP data cleared from %count accounts in database for IP: %ip */
+    IP_DATA_CLEARED_FOR_IP("misc.ip_data_cleared_for_ip", "%count", "%ip"),
+
+    /** IP data cleared from %count accounts in database */
+    IP_DATA_CLEARED_ALL("misc.ip_data_cleared_all", "%count"),
+
+    /** IP reset completed for: %ip */
+    IP_RESET_COMPLETE("misc.ip_reset_complete", "%ip"),
+
+    /** Cache cleared and IP data removed from %count accounts in database. */
+    IP_RESET_DATABASE_INFO("misc.ip_reset_database_info", "%count");
 
 
     private String key;

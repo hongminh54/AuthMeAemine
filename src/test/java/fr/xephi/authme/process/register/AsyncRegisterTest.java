@@ -12,6 +12,7 @@ import fr.xephi.authme.process.register.executors.RegistrationMethod;
 import fr.xephi.authme.process.register.executors.TwoFactorRegisterParams;
 import fr.xephi.authme.service.BukkitService;
 import fr.xephi.authme.service.CommonService;
+import fr.xephi.authme.service.VpnDetectionService;
 import fr.xephi.authme.settings.properties.RegistrationSettings;
 import fr.xephi.authme.settings.properties.RestrictionSettings;
 import org.bukkit.entity.Player;
@@ -49,6 +50,8 @@ public class AsyncRegisterTest {
     private DataSource dataSource;
     @Mock
     private SingletonStore<RegistrationExecutor> registrationExecutorStore;
+    @Mock
+    private VpnDetectionService vpnDetectionService;
 
     @Test
     public void shouldDetectAlreadyLoggedInPlayer() {

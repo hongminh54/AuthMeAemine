@@ -37,7 +37,7 @@ public class ResetIpCommand implements ExecutableCommand {
             ipRestrictionService.clearAllCache();
             int clearedAccounts = dataSource.clearAllLastIp();
             commonService.send(sender, MessageKey.IP_CACHE_CLEARED);
-            sender.sendMessage("§aCleared IP data from " + clearedAccounts + " accounts in database.");
+            commonService.send(sender, MessageKey.IP_DATA_CLEARED_ALL, Integer.toString(clearedAccounts));
             return;
         }
 
@@ -67,8 +67,8 @@ public class ResetIpCommand implements ExecutableCommand {
         int clearedAccounts = dataSource.clearLastIpForIp(ipToReset);
         commonService.send(sender, MessageKey.IP_CACHE_RESET, ipToReset);
 
-        sender.sendMessage("§aIP reset completed for: " + ipToReset);
-        sender.sendMessage("§7Cache cleared and IP data removed from " + clearedAccounts + " accounts in database.");
+        commonService.send(sender, MessageKey.IP_RESET_COMPLETE, ipToReset);
+        commonService.send(sender, MessageKey.IP_RESET_DATABASE_INFO, Integer.toString(clearedAccounts));
     }
 
     /**

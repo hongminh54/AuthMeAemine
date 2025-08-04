@@ -159,6 +159,60 @@ public final class RestrictionSettings implements SettingsHolder {
     public static final Property<Boolean> ENABLE_IMPROVED_IP_RESTRICTION =
         newProperty("settings.restrictions.enableImprovedIpRestriction", true);
 
+    @Comment({
+        "Enable strict IP restriction mode for enhanced security.",
+        "This mode uses real-time validation and reduces cache duration."})
+    public static final Property<Boolean> ENABLE_STRICT_IP_RESTRICTION =
+        newProperty("settings.restrictions.enableStrictIpRestriction", false);
+
+    @Comment({
+        "Cache duration for IP restriction data in minutes.",
+        "Lower values provide better accuracy but may impact performance."})
+    public static final Property<Integer> IP_RESTRICTION_CACHE_DURATION =
+        newProperty("settings.restrictions.ipRestrictionCacheDuration", 5);
+
+    @Comment({
+        "Enable VPN/Proxy detection to prevent users from bypassing IP restrictions.",
+        "This feature checks against known VPN and hosting provider IP ranges."})
+    public static final Property<Boolean> ENABLE_VPN_DETECTION =
+        newProperty("settings.restrictions.enableVpnDetection", false);
+
+    @Comment({
+        "Action to take when VPN/Proxy is detected.",
+        "Options: KICK, BLOCK_REGISTER, BLOCK_LOGIN, LOG_ONLY"})
+    public static final Property<String> VPN_DETECTION_ACTION =
+        newProperty("settings.restrictions.vpnDetectionAction", "KICK");
+
+    @Comment({
+        "Enable detection of popular DNS services that can be used as VPN/Proxy.",
+        "This includes services like 1.1.1.1, 8.8.8.8, etc."})
+    public static final Property<Boolean> ENABLE_DNS_VPN_DETECTION =
+        newProperty("settings.restrictions.enableDnsVpnDetection", true);
+
+    @Comment({
+        "Custom VPN/Proxy IP ranges to block (CIDR format).",
+        "Example: 1.1.1.0/24, 8.8.8.0/24"})
+    public static final Property<Set<String>> CUSTOM_VPN_RANGES =
+        newLowercaseStringSetProperty("settings.restrictions.customVpnRanges");
+
+    @Comment({
+        "Custom VPN/Proxy hostnames to block.",
+        "Example: vpn.example.com, proxy.example.com"})
+    public static final Property<Set<String>> CUSTOM_VPN_HOSTNAMES =
+        newLowercaseStringSetProperty("settings.restrictions.customVpnHostnames");
+
+    @Comment({
+        "IP addresses or ranges to whitelist (never block as VPN).",
+        "Use CIDR format for ranges. Example: 192.168.1.0/24"})
+    public static final Property<Set<String>> VPN_WHITELIST =
+        newLowercaseStringSetProperty("settings.restrictions.vpnWhitelist");
+
+    @Comment({
+        "Enable advanced VPN detection using multiple methods.",
+        "This may slightly impact performance but provides better detection."})
+    public static final Property<Boolean> ENABLE_ADVANCED_VPN_DETECTION =
+        newProperty("settings.restrictions.enableAdvancedVpnDetection", false);
+
     @Comment("AuthMe will NEVER teleport players if set to true!")
     public static final Property<Boolean> NO_TELEPORT =
         newProperty("settings.restrictions.noTeleport", false);

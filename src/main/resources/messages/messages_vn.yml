@@ -65,6 +65,12 @@ misc:
     accounts_owned_other: 'Người chơi %name có %count tài khoản:'
     ip_cache_reset: '&2Bộ nhớ đệm IP đã được đặt lại cho %ip'
     ip_cache_cleared: '&2Tất cả bộ nhớ đệm IP đã được xóa'
+    ip_data_cleared_for_ip: '&aDữ liệu IP đã được xóa khỏi %count tài khoản trong cơ sở dữ liệu cho IP: %ip'
+    ip_data_cleared_all: '&aDữ liệu IP đã được xóa khỏi %count tài khoản trong cơ sở dữ liệu'
+    ip_reset_complete: '&aReset IP hoàn tất cho: %ip'
+    vpn_check_result: 'Kết quả kiểm tra VPN: %result'
+    vpn_detection_info: 'Thông tin phát hiện VPN: %info'
+    ip_reset_database_info: '&7Cache đã được xóa và dữ liệu IP đã được loại bỏ khỏi %count tài khoản trong cơ sở dữ liệu.'
 
 # Session messages
 session:
@@ -79,6 +85,7 @@ on_join_validation:
     characters_in_name: '&4Tên nhân vật có chứa ký tự không hợp lệ. Các ký tự được cho phép: %valid_chars'
     kick_full_server: '&4Máy chủ quá tải, vui lòng thử lại sau!'
     country_banned: '&4Quốc gia của bạn bị cấm tham gia máy chủ này!'
+    vpn_proxy_detected: '&4Kết nối VPN/Proxy không được phép trên máy chủ này!'
     not_owner_error: 'Bạn không phải là chủ sở hữu tài khoản này, hãy chọn tên khác!'
     invalid_name_case: 'Bạn nên vào máy chủ với tên đăng nhập là %valid, không phải là %invalid.'
     quick_command: 'Bạn đang xài lệnh quá nhanh. Hãy thoát máy chủ và chờ một lúc trước khi sử dụng lệnh.'

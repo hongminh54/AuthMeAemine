@@ -13,6 +13,7 @@ import fr.xephi.authme.process.login.AsynchronousLogin;
 import fr.xephi.authme.service.BukkitService;
 import fr.xephi.authme.service.CommonService;
 import fr.xephi.authme.service.IpRestrictionService;
+import fr.xephi.authme.service.VpnDetectionService;
 import fr.xephi.authme.service.PluginHookService;
 import fr.xephi.authme.service.SessionService;
 import fr.xephi.authme.service.ValidationService;
@@ -86,6 +87,9 @@ public class AsynchronousJoin implements AsynchronousProcess {
 
     @Inject
     private IpRestrictionService ipRestrictionService;
+
+    @Inject
+    private VpnDetectionService vpnDetectionService;
 
     AsynchronousJoin() {
     }
@@ -217,6 +221,15 @@ public class AsynchronousJoin implements AsynchronousProcess {
      * @return true if the verification is OK (no infraction), false if player has been kicked
      */
     private boolean validatePlayerCountForIp(Player player, String ip) {
+        if (vpnDetectionService.isVpnOrProxy(ip)) {
+            VpnDetectionService.VpnDetectionAction action = vpnDetectionService.getVpnDetectionAction();
+            if (action == VpnDetectionService.VpnDetectionAction.KICK) {
+                bukkitService.scheduleSyncTaskFromOptionallyAsyncTask(
+                    () -> player.kickPlayer(service.retrieveSingleMessage(player, MessageKey.VPN_PROXY_DETECTED)));
+                return false;
+            }
+        }
+
         if (service.getProperty(RestrictionSettings.ENABLE_IMPROVED_IP_RESTRICTION)) {
             if (ipRestrictionService.hasReachedMaxJoinedPlayersForIp(player)) {
                 bukkitService.scheduleSyncTaskFromOptionallyAsyncTask(

@@ -24,6 +24,7 @@ import fr.xephi.authme.security.PasswordSecurity;
 import fr.xephi.authme.service.BukkitService;
 import fr.xephi.authme.service.CommonService;
 import fr.xephi.authme.service.IpRestrictionService;
+import fr.xephi.authme.service.VpnDetectionService;
 import fr.xephi.authme.service.SessionService;
 import fr.xephi.authme.service.bungeecord.BungeeSender;
 import fr.xephi.authme.service.bungeecord.MessageType;
@@ -88,6 +89,9 @@ public class AsynchronousLogin implements AsynchronousProcess {
 
     @Inject
     private IpRestrictionService ipRestrictionService;
+
+    @Inject
+    private VpnDetectionService vpnDetectionService;
 
     AsynchronousLogin() {
     }
@@ -189,6 +193,15 @@ public class AsynchronousLogin implements AsynchronousProcess {
             if (ipRestrictionService.hasReachedMaxLoggedInPlayersForIp(player)) {
                 if (!quiet) {
                     service.send(player, MessageKey.ALREADY_LOGGED_IN_ERROR);
+                }
+                return null;
+            }
+        } else if (vpnDetectionService.isVpnOrProxy(ip)) {
+            VpnDetectionService.VpnDetectionAction action = vpnDetectionService.getVpnDetectionAction();
+            if (action == VpnDetectionService.VpnDetectionAction.BLOCK_LOGIN ||
+                action == VpnDetectionService.VpnDetectionAction.KICK) {
+                if (!quiet) {
+                    service.send(player, MessageKey.VPN_PROXY_DETECTED);
                 }
                 return null;
             }

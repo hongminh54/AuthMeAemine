@@ -64,6 +64,12 @@ misc:
   usage_change_password: '&cUsage: /changepassword <oldPassword> <newPassword>'
   ip_cache_reset: '&2IP cache has been reset for %ip'
   ip_cache_cleared: '&2All IP cache has been cleared'
+  ip_data_cleared_for_ip: '&aIP data cleared from %count accounts in database for IP: %ip'
+  ip_data_cleared_all: '&aIP data cleared from %count accounts in database'
+  ip_reset_complete: '&aIP reset completed for: %ip'
+  ip_reset_database_info: '&7Cache cleared and IP data removed from %count accounts in database.'
+  vpn_check_result: 'VPN check result: %result'
+  vpn_detection_info: 'VPN detection info: %info'
 
 # Session messages
 session:
@@ -80,6 +86,7 @@ on_join_validation:
   same_nick_online: '&4The same username is already playing on the server!'
   invalid_name_case: 'You should join using username %valid, not %invalid.'
   same_ip_online: 'A player with the same IP is already in game!'
+  vpn_proxy_detected: '&4VPN/Proxy connections are not allowed on this server!'
   quick_command: 'You used a command too fast! Please, join the server again and wait more before using any command.'
 
 # Email

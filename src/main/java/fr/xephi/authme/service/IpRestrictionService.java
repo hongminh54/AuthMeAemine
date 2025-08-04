@@ -4,6 +4,7 @@ import fr.xephi.authme.datasource.DataSource;
 import fr.xephi.authme.initialization.Reloadable;
 import fr.xephi.authme.permission.PermissionsManager;
 import fr.xephi.authme.permission.PlayerStatePermission;
+import fr.xephi.authme.service.BukkitService;
 import fr.xephi.authme.settings.Settings;
 import fr.xephi.authme.settings.properties.RestrictionSettings;
 import fr.xephi.authme.util.InternetProtocolUtils;
@@ -17,6 +18,7 @@ import javax.inject.Inject;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Service for handling IP-based restrictions with improved performance and caching.
@@ -35,11 +37,15 @@ public class IpRestrictionService implements Reloadable {
     @Inject
     private BukkitService bukkitService;
 
+    @Inject
+    private VpnDetectionService vpnDetectionService;
+
     private final ConcurrentHashMap<String, CachedIpData> ipCache = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Long> lastCheckTime = new ConcurrentHashMap<>();
+    private final ReentrantReadWriteLock cacheLock = new ReentrantReadWriteLock();
 
-    private static final long CACHE_DURATION_MS = TimeUnit.MINUTES.toMillis(5);
-    private static final long CLEANUP_INTERVAL_TICKS = 20L * 60L * 5L; // 5 minutes
+    private static final long DEFAULT_CACHE_DURATION_MS = TimeUnit.MINUTES.toMillis(5);
+    private static final long CLEANUP_INTERVAL_TICKS = 20L * 60L * 5L;
 
     private BukkitTask cleanupTask;
 
@@ -57,8 +63,8 @@ public class IpRestrictionService implements Reloadable {
             this.timestamp = System.currentTimeMillis();
         }
 
-        boolean isExpired() {
-            return System.currentTimeMillis() - timestamp > CACHE_DURATION_MS;
+        boolean isExpired(long cacheDurationMs) {
+            return System.currentTimeMillis() - timestamp > cacheDurationMs;
         }
     }
 
@@ -83,8 +89,24 @@ public class IpRestrictionService implements Reloadable {
             return true;
         }
 
+        if (vpnDetectionService.isVpnOrProxy(ip)) {
+            VpnDetectionService.VpnDetectionAction action = vpnDetectionService.getVpnDetectionAction();
+            if (action == VpnDetectionService.VpnDetectionAction.BLOCK_REGISTER ||
+                action == VpnDetectionService.VpnDetectionAction.KICK) {
+                return false;
+            }
+        }
+
         int registeredCount = getRegisteredAccountsCount(ip);
-        return registeredCount < maxRegPerIp;
+        boolean allowed = registeredCount < maxRegPerIp;
+
+        if (!allowed && settings.getProperty(RestrictionSettings.ENABLE_STRICT_IP_RESTRICTION)) {
+            clearCacheForIp(ip);
+            registeredCount = getRegisteredAccountsCount(ip);
+            allowed = registeredCount < maxRegPerIp;
+        }
+
+        return allowed;
     }
 
     /**
@@ -108,8 +130,23 @@ public class IpRestrictionService implements Reloadable {
             return false;
         }
 
+        if (vpnDetectionService.isVpnOrProxy(ip)) {
+            VpnDetectionService.VpnDetectionAction action = vpnDetectionService.getVpnDetectionAction();
+            if (action == VpnDetectionService.VpnDetectionAction.BLOCK_LOGIN ||
+                action == VpnDetectionService.VpnDetectionAction.KICK) {
+                return true;
+            }
+        }
+
         int loggedInCount = getLoggedInPlayersCount(ip, player.getName());
-        return loggedInCount >= maxLoginPerIp;
+        boolean reached = loggedInCount >= maxLoginPerIp;
+
+        if (reached && settings.getProperty(RestrictionSettings.ENABLE_STRICT_IP_RESTRICTION)) {
+            loggedInCount = getLoggedInPlayersCountRealTime(ip, player.getName());
+            reached = loggedInCount >= maxLoginPerIp;
+        }
+
+        return reached;
     }
 
     /**
@@ -133,6 +170,13 @@ public class IpRestrictionService implements Reloadable {
             return false;
         }
 
+        if (vpnDetectionService.isVpnOrProxy(ip)) {
+            VpnDetectionService.VpnDetectionAction action = vpnDetectionService.getVpnDetectionAction();
+            if (action == VpnDetectionService.VpnDetectionAction.KICK) {
+                return true;
+            }
+        }
+
         int onlineCount = getOnlinePlayersCount(ip);
         return onlineCount > maxJoinPerIp;
     }
@@ -144,16 +188,33 @@ public class IpRestrictionService implements Reloadable {
      * @return the number of registered accounts
      */
     public int getRegisteredAccountsCount(String ip) {
-        CachedIpData cached = ipCache.get(ip);
-        if (cached != null && !cached.isExpired()) {
-            return cached.registeredCount;
+        long cacheDuration = getCacheDuration();
+
+        cacheLock.readLock().lock();
+        try {
+            CachedIpData cached = ipCache.get(ip);
+            if (cached != null && !cached.isExpired(cacheDuration)) {
+                return cached.registeredCount;
+            }
+        } finally {
+            cacheLock.readLock().unlock();
         }
 
-        List<String> accounts = dataSource.getAllAuthsByIp(ip);
-        int count = accounts.size();
-        
-        updateCache(ip, count, getOnlinePlayersCount(ip));
-        return count;
+        cacheLock.writeLock().lock();
+        try {
+            CachedIpData cached = ipCache.get(ip);
+            if (cached != null && !cached.isExpired(cacheDuration)) {
+                return cached.registeredCount;
+            }
+
+            List<String> accounts = dataSource.getAllAuthsByIp(ip);
+            int count = accounts.size();
+
+            updateCache(ip, count, getOnlinePlayersCount(ip));
+            return count;
+        } finally {
+            cacheLock.writeLock().unlock();
+        }
     }
 
     /**
@@ -204,13 +265,50 @@ public class IpRestrictionService implements Reloadable {
         ipCache.put(ip, new CachedIpData(registeredCount, onlineCount));
     }
 
+    private long getCacheDuration() {
+        int minutes = settings.getProperty(RestrictionSettings.IP_RESTRICTION_CACHE_DURATION);
+        return TimeUnit.MINUTES.toMillis(Math.max(1, minutes));
+    }
+
+    private int getLoggedInPlayersCountRealTime(String ip, String excludePlayer) {
+        int count = 0;
+        for (Player onlinePlayer : bukkitService.getOnlinePlayers()) {
+            String playerIp = PlayerUtils.getPlayerIp(onlinePlayer);
+            if (ip.equalsIgnoreCase(playerIp)
+                && !onlinePlayer.getName().equals(excludePlayer)
+                && dataSource.isLogged(onlinePlayer.getName().toLowerCase())) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    public void clearCacheForIp(String ip) {
+        cacheLock.writeLock().lock();
+        try {
+            ipCache.remove(ip);
+        } finally {
+            cacheLock.writeLock().unlock();
+        }
+    }
+
+    public void clearAllCache() {
+        cacheLock.writeLock().lock();
+        try {
+            ipCache.clear();
+        } finally {
+            cacheLock.writeLock().unlock();
+        }
+    }
+
     /**
      * Clears expired cache entries.
      */
     public void cleanupCache() {
-        ipCache.entrySet().removeIf(entry -> entry.getValue().isExpired());
-        lastCheckTime.entrySet().removeIf(entry -> 
-            System.currentTimeMillis() - entry.getValue() > CACHE_DURATION_MS);
+        long cacheDuration = getCacheDuration();
+        ipCache.entrySet().removeIf(entry -> entry.getValue().isExpired(cacheDuration));
+        lastCheckTime.entrySet().removeIf(entry ->
+            System.currentTimeMillis() - entry.getValue() > cacheDuration);
     }
 
     /**
@@ -223,13 +321,7 @@ public class IpRestrictionService implements Reloadable {
         lastCheckTime.remove(ip);
     }
 
-    /**
-     * Clears all cached IP data.
-     */
-    public void clearAllCache() {
-        ipCache.clear();
-        lastCheckTime.clear();
-    }
+
 
     /**
      * Gets all registered usernames for the given IP address.

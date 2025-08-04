@@ -10,6 +10,7 @@ import fr.xephi.authme.message.MessageKey;
 import fr.xephi.authme.permission.PlayerStatePermission;
 import fr.xephi.authme.service.BukkitService;
 import fr.xephi.authme.service.CommonService;
+import fr.xephi.authme.service.VpnDetectionService;
 import fr.xephi.authme.settings.properties.DatabaseSettings;
 import fr.xephi.authme.settings.properties.HooksSettings;
 import fr.xephi.authme.settings.properties.PluginSettings;
@@ -59,6 +60,8 @@ public class AsynchronousLoginTest {
     private LimboService limboService;
     @Mock
     private BukkitService bukkitService;
+    @Mock
+    private VpnDetectionService vpnDetectionService;
 
     @BeforeClass
     public static void initLogger() {

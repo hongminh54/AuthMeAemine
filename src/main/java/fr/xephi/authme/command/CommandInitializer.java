@@ -30,6 +30,7 @@ import fr.xephi.authme.command.executable.authme.TotpViewStatusCommand;
 import fr.xephi.authme.command.executable.authme.UnregisterAdminCommand;
 import fr.xephi.authme.command.executable.authme.UpdateHelpMessagesCommand;
 import fr.xephi.authme.command.executable.authme.VersionCommand;
+import fr.xephi.authme.command.executable.authme.VpnCommand;
 import fr.xephi.authme.command.executable.authme.debug.DebugCommand;
 import fr.xephi.authme.command.executable.captcha.CaptchaCommand;
 import fr.xephi.authme.command.executable.changepassword.ChangePasswordCommand;
@@ -440,6 +441,18 @@ public class CommandInitializer {
             .detailedDescription("Reload the AuthMeReloaded plugin.")
             .permission(AdminPermission.RELOAD)
             .executableCommand(ReloadCommand.class)
+            .register();
+
+        // Register the vpn command
+        CommandDescription.builder()
+            .parent(authmeBase)
+            .labels("vpn")
+            .description("VPN detection management")
+            .detailedDescription("Manage VPN detection: check IPs, get detection info, reload cache.")
+            .withArgument("action", "Action: check, info, reload", MANDATORY)
+            .withArgument("target", "Player name or IP address", OPTIONAL)
+            .permission(AdminPermission.GET_IP)
+            .executableCommand(VpnCommand.class)
             .register();
 
         // Register the version command

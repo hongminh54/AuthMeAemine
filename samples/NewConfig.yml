@@ -316,6 +316,33 @@ settings:
         # Enable improved IP restriction service with caching for better performance
         # This helps prevent issues with IP restrictions not working on some servers (default: true)
         enableImprovedIpRestriction: true
+        # Enable strict IP restriction mode for enhanced security (default: false)
+        # This mode uses real-time validation and reduces cache duration
+        enableStrictIpRestriction: false
+        # Cache duration for IP restriction data in minutes (default: 5)
+        # Lower values provide better accuracy but may impact performance
+        ipRestrictionCacheDuration: 5
+        # Enable VPN/Proxy detection to prevent users from bypassing IP restrictions (default: false)
+        # This feature checks against known VPN and hosting provider IP ranges
+        enableVpnDetection: false
+        # Action to take when VPN/Proxy is detected (default: KICK)
+        # Options: KICK, BLOCK_REGISTER, BLOCK_LOGIN, LOG_ONLY
+        vpnDetectionAction: KICK
+        # Enable detection of popular DNS services that can be used as VPN/Proxy (default: true)
+        # This includes services like 1.1.1.1, 8.8.8.8, etc.
+        enableDnsVpnDetection: true
+        # Custom VPN/Proxy IP ranges to block (CIDR format)
+        # Example: 1.1.1.0/24, 8.8.8.0/24
+        customVpnRanges: []
+        # Custom VPN/Proxy hostnames to block
+        # Example: vpn.example.com, proxy.example.com
+        customVpnHostnames: []
+        # IP addresses or ranges to whitelist (never block as VPN)
+        # Use CIDR format for ranges. Example: 192.168.1.0/24
+        vpnWhitelist: []
+        # Enable advanced VPN detection using multiple methods (default: false)
+        # This may slightly impact performance but provides better detection
+        enableAdvancedVpnDetection: false
 
         # When this setting is enabled, online players can't be kicked out
         # due to "Logged in from another Location"
